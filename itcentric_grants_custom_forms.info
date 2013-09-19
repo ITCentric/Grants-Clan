@@ -1,0 +1,4 @@
+name = grants_custom_forms
+description = Module for all of the custom forms to be used on the Grants website
+core = 7.x
+package = "IT Centric"
