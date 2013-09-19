@@ -1,4 +1,5 @@
-name = Custom Menu
-description = Module for all the custom menu hooks
+name = ITCentric Grants Custom Menu
+description = Module for all the custom menu hooks on the Grants Clan marketing site
 core = 7.x
 package = "IT Centric"
+
