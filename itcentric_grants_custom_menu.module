@@ -1,0 +1,27 @@
+<?php
+/*
+function custom_menu_menu_alter(&$items){
+
+foreach($items as $item){
+	if($item['title']=="My Brus")
+
+		$item['access_callback'] = "my_brus_access";
+		
+	}
+
+}
+
+
+
+
+function my_brus_access(){
+
+$account = user_load($GLOBALS['user']->uid);
+
+
+
+return FALSE;
+
+}
+*/
+
