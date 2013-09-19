@@ -1,0 +1,392 @@
+<?php
+function grants_custom_forms_Add_User_form($form, &$form_state)
+{
+$form = array();
+$link = $_SERVER['SERVER_NAME'];
+
+global $user;
+
+if (isset($user->uid))
+{
+	$loadedUser = user_load($user->uid);
+	//drupal_set_message('<pre>'.print_r($loadedUser,true).'</pre>');	
+	$roles = $loadedUser->roles;
+	if (isset($roles[6]))
+	{
+		$selectRoles = array('Bru','Chieftain');
+		$userNAMES = array('None');
+		$userUIDS = array(0);
+
+		$query = 'SELECT DISTINCT(ur.uid) 
+	  	FROM {users_roles} AS ur
+	  	WHERE ur.rid IN (:rids)';
+		$result = db_query($query, array(':rids' => array(4))); //Query all users with role chieftain
+	
+		foreach ($result as $row) {
+			$loadeduser = user_load($row->uid);
+			$userUIDS[] = $row->uid;	
+		  	$userNAMES[] = $loadeduser->name; //Users saved into an array
+			}
+		
+		
+		$chieftainUsers = $userNAMES;
+		$form_state['uids'] = $userUIDS;
+		$chieftaindefault = $userNAMES[0];
+	}
+	else 
+	{
+		$selectRoles = array('Bru');
+		$chieftainUsers = array($user->name);
+		$form_state['uids'] = array($user->uid);
+		$chieftaindefault = $user->name;
+	}
+}
+
+
+$form['firstName'] = array(
+'#type' => 'textfield',
+'#title' => 'First Name:',
+'#required' => true,
+'#size' => '40'
+);
+$form['lastName'] = array(
+'#type' => 'textfield',
+'#title' => 'Last Name:',
+'#required' => true,
+'#size' => '40'
+);
+$form['Email'] = array(
+'#type' => 'textfield',
+'#title' => 'E-mail Address:',
+'#required' => true,
+'#size' => '40'
+);
+$form['cellphone'] = array(
+'#type' => 'textfield',
+'#title' => 'Cellphone Number:',
+'#required' => true,
+'#size' => '35'
+);
+$form['DOB'] = array(
+'#type' => 'date_popup',
+'#required' => true,
+'#title' => 'Date of Birth:',
+'#date_format' => 'Y-m-d',
+'#date_year_range' => '-100:0',
+);
+$form['Gender'] = array(
+'#type' => 'select',
+'#title' => 'Gender:',
+'#required' => true,
+'#options' => array('Male','Female'),
+'#default_value' => 'Male'
+);
+$form['Status'] = array(
+'#type' => 'select',
+'#title' => 'Status:',
+'#required' => true,
+'#options' => array('New Recruit','Bru','Loyal Bru','Friend'),
+'#default_value' => 0
+);
+/*$form['CardNumber'] = array(
+'#type' => 'textfield',
+'#title' => 'Card Number:',
+'#required' => false,
+'#size' => '20'
+);*/
+//set default day to today
+
+/*$form['RecruitmentDate'] = array(
+'#type' => 'date_popup',
+'#required' => true,
+'#title' => 'Recruitment Date:',
+'#default_value' => $today_date,
+'#date_format' => 'Y-m-d',
+'#date_year_range' => '-3:0',
+);*/
+$today_date = date('Y-m-d');
+$form['NewRecruitDate'] = array(
+'#type' => 'date_popup',
+'#required' => true,
+'#title' => 'Recruitment Date:',
+'#default_value' => $today_date,
+'#date_format' => 'Y-m-d',
+'#date_year_range' => '-3:0',
+);
+// test if it is a admin
+if (isset($roles[6])){
+	$form['brurole'] = array(
+	'#type' => 'select',
+	'#title' => 'Role:',
+	'#required' => true,
+	'#options' => $selectRoles,
+	'#default_value' => 'Bru',
+	'#access' => isset($roles[6])
+	);
+	$form['ChieftainNAME'] = array(
+	'#type' => 'select',
+	'#title' => 'Chieftain:',
+	'#required' => true,
+	'#options' => $chieftainUsers,
+	'#default_value' => $chieftaindefault,
+	'#access' => isset($roles[6])
+	);
+} else {
+	$form['brurole'] = array(
+	'#type' => 'select',
+	'#title' => 'Role:',
+	'#required' => true,
+	'#options' => $selectRoles,
+	'#default_value' => 'Bru',
+	'#access' => isset($roles[6]),
+	'#value' => 0
+	);
+	$form['ChieftainNAME'] = array(
+	'#type' => 'select',
+	'#title' => 'Chieftain:',
+	'#required' => true,
+	'#options' => $chieftainUsers,
+	'#default_value' => $chieftaindefault,
+	'#access' => isset($roles[6]),
+	'#value' => 0
+	);
+	
+}
+
+$form['submit'] = array(
+'#type' => 'submit',
+'#value' => 'Submit',
+);
+
+$form['actions']['cancel'] = array(
+    '#type'   => 'submit',
+    '#value'  => t('Cancel'),
+    '#submit' => array('grants_custom_forms_Add_User_form_cancel'),
+    '#limit_validation_errors' => array(),
+  );
+  return $form;
+}
+
+function grants_custom_forms_Add_User_form_cancel($form, &$form_state) {
+	//when cancel button is clicked
+	global $user;
+	$loadedUser = user_load($user->uid);
+	$userroles = $loadedUser->roles;
+	if (isset($userroles[6]))
+	{
+			  $form_state['redirect'] = 'profiles-admin';	
+	} 
+	else
+	{
+			  $form_state['redirect'] = 'brus';		
+	}
+
+}
+
+
+function grants_custom_forms_Add_User_form_validate($form,&$form_state)
+{
+	
+	
+	if (!isset($form_state['input']['firstName']))
+	{
+		form_set_error('F','Please ensure that you have set a First Name.');
+	}
+
+	
+	
+	
+	if (!isset($form_state['input']['lastName']))
+	{
+		form_set_error('Last Name','Please ensure that you have set a Last Name.');
+	}
+
+	
+	
+	
+	if (!isset($form_state['input']['Email']))
+	//check for unique email address **************************************************
+	{
+		form_set_error('Email','Please ensure that you have set an E-mail.');
+	}
+
+	
+	
+	
+	if (isset($form_state['input']['cellphone']))
+	{
+	$cellnumber = $form_state['input']['cellphone']; //Validating the cellphone number field
+													//This one is a bit longer as i need to check for valid formatting (10 Digits, Numeric and starting with 0)
+			if (strlen($cellnumber) > 10 || strlen($cellnumber) < 10)
+			{
+				form_set_error('Cellphone','The Cellphone Number is formatted incorrectly');
+			}
+			else 
+			{
+				if ($cellnumber[0] != 0)
+				{
+					form_set_error('Cellphone','The Cellphone Number is formatted incorrectly');
+				}
+				else 
+				{
+				   if (!is_numeric($cellnumber))	
+				   {
+				   	form_set_error('Cellphone','The Cellphone Number contains invalid characters');
+				   }
+					else
+						{
+							$query = new EntityFieldQuery;
+							$result = $query
+  							->entityCondition('entity_type', 'user')
+  							->propertyCondition('name', $form_state['input']['cellphone'])
+  							->execute();
+							
+							if(count($result) > 0)
+							{
+								form_set_error('Username','Cellphone number already in use');
+								
+							}
+							else {
+							$newQuery = new EntityFieldQuery;
+							$result = $newQuery
+  							->entityCondition('entity_type', 'user')
+  							->propertyCondition('mail', $form_state['input']['Email']) //Entity query for existing email addresses
+  							->execute();
+							
+							 if(isset($result['user']))
+							 {
+							if(count($result['user'] > 0))
+							{
+								form_set_error('Email','Email Address already in use');
+								//drupal_set_message('<pre>'.print_r($_GLOBAL,true).'</pre>');	
+							}
+							 }
+							}
+
+						}
+				   
+				}
+			}
+	}
+	else 
+	{
+		form_set_error('Cellphone','Please ensure that you have entered a Cellphone number.');
+	}	
+
+		if(!isset($form_state['input']['Gender']))
+		{
+			form_set_error('Gender','Please ensure you have selected a Gender');
+		}
+		
+		if(!isset($form_state['input']['Status']))
+		{
+			form_set_error('Status','Please ensure you have selected a Status');
+		}	
+}
+
+function grants_custom_forms_Add_User_form_submit($form,&$form_state)
+{
+	global $user;
+	//drupal_set_message('<pre>'.print_r($form_state,true).'</pre>');
+	
+	$password = user_password(8);
+ 
+	$cellnumber = $form_state['input']['cellphone'];
+	$email = $form_state['input']['Email'];
+	if (!isset($form_state['input']['ChieftainNAME'])){
+		$form_state['input']['ChieftainNAME'] = $form_state['values']['ChieftainNAME'];
+	}
+	if (!isset($form_state['input']['brurole'])){
+		$form_state['input']['brurole'] = $form_state['values']['brurole'];
+	}
+	$role = $form_state['input']['brurole'];
+	//drupal_set_message('<pre>'.print_r($form_state['values']['Status'],true).'</pre>');
+	if($role == 0)
+	{
+		$userrole = array(5 => 'Bru');
+	}
+	elseif($role == 1)
+	{
+		$userrole = array(4 => 'Chieftain');
+	}
+
+	$gender = $form_state['values']['Gender'];
+	if($gender == 0)
+	{
+		$gender = array(1 => 'Male');	
+	}
+	else 
+	{
+		$gender = array(2 => 'Female');
+	}
+
+	$status = $form_state['values']['Status'];
+	//drupal_set_message('<pre>'.print_r($status,true).'</pre>');
+	if ($status == 0)
+	{
+		$status = array(1 => 'New Recruit');
+	}
+	elseif ($status == 1)
+	{
+		$status = array(2 => 'Bru');
+	}
+	elseif($status == 2)
+	{
+		$status = array(3 => 'Loyal Bru');
+	}
+	elseif($status == 3)
+	{
+		$status = array(4 => 'Friend');
+	}
+	//drupal_set_message('<pre>'.print_r($form_state['values']['DOB'],true).'</pre>');
+
+	//drupal_set_message('<pre>'.print_r($status,true).'</pre>');
+
+	
+  //set up the user fields
+$userDetails = array();
+
+$userDetails['name'] = $cellnumber;
+$userDetails['mail'] = $email;
+$userDetails['field_cell_number']['und'][0]['value'] = $cellnumber;
+$userDetails['field_first_name']['und'][0]['value'] = $form_state['values']['firstName'];
+$userDetails['field_last_name']['und'][0]['value'] = $form_state['values']['lastName'];
+$userDetails['field_date_of_birth']['und'][0]['value'] = $form_state['values']['DOB'];
+$userDetails['field_gender']['und'][0]['value'] = $gender;
+$userDetails['field_bru_status']['und'][0]['value'] = $status;
+//$userDetails['field_recruitment_date‎']['und'][0]['value'] = $form_state['values']['RecruitmentDate'];
+$userDetails['field_new_recruitment_date']['und'][0]['value'] = $form_state['values']['NewRecruitDate'];
+// If role is bru then save chieftain id
+if ($role == 0)
+{
+	
+	$selectedElement = $form_state['values']['ChieftainNAME'];
+	$uids = $form_state['uids'];
+	$userUID = $uids[$selectedElement];	
+	$userDetails['field_chieftain_uid']['und'][0]['target_id'] = $userUID;
+}
+
+$userDetails['pass'] = $password;
+$userDetails['roles'] = $userrole;
+
+//drupal_set_message('<pre>'.print_r($userDetails['field_bru_status']['und'][0]['value'],true).'</pre>');
+
+if (!user_save('', $userDetails))
+{
+	drupal_set_message('Unable to Add User, please try again');
+} else {
+	drupal_set_message('User added Successfully');
+	$loadedUser = user_load($user->uid);
+	$userroles = $loadedUser->roles;
+	if (isset($userroles[6])){
+			drupal_goto('profiles-admin');	
+	} else
+		{
+			drupal_goto('brus');		
+		}
+	
+};
+	
+}
+
+?>
