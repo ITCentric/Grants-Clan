@@ -1,0 +1,5 @@
+name = ITCentric Grants Custom Forms
+description = Module for all of the custom forms to be used on the Grants Clan website
+core = 7.x
+package = "IT Centric"
+
