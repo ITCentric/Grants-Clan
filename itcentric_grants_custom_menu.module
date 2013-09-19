@@ -1,6 +1,6 @@
 <?php
 /*
-function custom_menu_menu_alter(&$items){
+function itcentric_grants_custom_menu_menu_alter(&$items){
 
 foreach($items as $item){
 	if($item['title']=="My Brus")
